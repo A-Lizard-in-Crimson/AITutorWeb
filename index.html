@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tutor - Digital Binder</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2a5298;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .tagline {
+            color: #666;
+            font-size: 1.2em;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .panel h2 {
+            color: #2a5298;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        /* Left Panel - Quick Actions */
+        .quick-actions button {
+            width: 100%;
+            padding: 12px 20px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .quick-actions button:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Center Panel - Chat Interface */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            animation: fadeIn 0.3s ease-in;
+            white-space: pre-wrap;
+        }
+        
+        .message.user {
+            background: #e3f2fd;
+            margin-left: 20%;
+        }
+        
+        .message.tutor {
+            background: #f3e5f5;
+            margin-right: 20%;
+        }
+        
+        .message.system {
+            background: #fff3e0;
+            text-align: center;
+            font-style: italic;
+            color: #666;
+        }
+        
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .send-button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .send-button:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+        
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* Right Panel - Context & Memory */
+        .memory-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+        
+        .memory-item .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
+        
+        /* File Drop Zone */
+        .file-drop-zone {
+            border: 3px dashed #ddd;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        .file-drop-zone.dragover {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+        
+        /* ADHD Support Features */
+        .adhd-toolbar {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .mood-indicator {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .mood-emoji {
+            font-size: 2em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .mood-emoji:hover {
+            transform: scale(1.2);
+        }
+        
+        .mood-emoji.selected {
+            transform: scale(1.3);
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+        }
+        
+        /* API Status */
+        .api-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+        
+        .status-dot.connected {
+            background: #4caf50;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.error {
+            background: #f44336;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
+        /* Loading dots */
+        .typing-indicator {
+            display: inline-block;
+        }
+        
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            margin: 0 2px;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-indicator span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+        
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Tutor & Digital Binder</h1>
+            <p class="tagline">Your ADHD-friendly academic companion</p>
+        </header>
+        
+        <!-- ADHD Support Toolbar -->
+        <div class="adhd-toolbar">
+            <div class="mood-indicator">
+                <span>How are you feeling?</span>
+                <span class="mood-emoji" data-mood="happy" onclick="setMood('happy', '😊')">😊</span>
+                <span class="mood-emoji" data-mood="focused" onclick="setMood('focused', '😐')">😐</span>
+                <span class="mood-emoji" data-mood="struggling" onclick="setMood('struggling', '😔')">😔</span>
+                <span class="mood-emoji" data-mood="excited" onclick="setMood('excited', '🤩')">🤩</span>
+            </div>
+            <div id="current-focus">
+                Current Focus: <strong>Getting Started</strong>
+            </div>
+        </div>
+        
+        <div class="main-grid">
+            <!-- Left Panel: Quick Actions -->
+            <div class="panel quick-actions">
+                <h2>Quick Actions</h2>
+                <button onclick="capturePhoto()">📸 Capture Whiteboard</button>
+                <button onclick="checkAssignments()">📋 Check Assignments</button>
+                <button onclick="generateStudyGuide()">📝 Create Study Guide</button>
+                <button onclick="dailyChecklist()">✅ Daily Checklist</button>
+                <button onclick="askQuestion()">❓ Ask Question</button>
+                <button onclick="reviewNotes()">📖 Review Notes</button>
+            </div>
+            
+            <!-- Center Panel: Chat Interface -->
+            <div class="panel">
+                <h2>Tutor Chat</h2>
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message system">
+                            Welcome! I'm your AI Tutor. I'm here to guide you through your studies without giving you the answers. How can I help you today?
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input 
+                            type="text" 
+                            class="chat-input" 
+                            id="chatInput" 
+                            placeholder="Type your message here..."
+                            onkeypress="handleKeyPress(event)"
+                        >
+                        <button class="send-button" id="sendButton" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+                
+                <!-- File Drop Zone -->
+                <div class="file-drop-zone" id="dropZone">
+                    <p>📎 Drag and drop files here or click to upload</p>
+                    <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+                        Supports: Photos, PDFs, Documents
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Right Panel: Context & Memory -->
+            <div class="panel">
+                <h2>Active Context</h2>
+                <div id="memoryDisplay">
+                    <div class="memory-item">
+                        <span class="tag">META</span>
+                        <strong>Session Started</strong><br>
+                        <small>Distributed memory system active</small>
+                    </div>
+                    <div class="memory-item">
+                        <span class="tag">FOCUS</span>
+                        <strong>Current Project</strong><br>
+                        <small>AI Tutor Web Interface</small>
+                    </div>
+                </div>
+                
+                <h2 style="margin-top: 30px;">Recent Files</h2>
+                <div id="recentFiles">
+                    <div class="memory-item">
+                        <small>No files uploaded yet</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- API Status Indicator -->
+    <div class="api-status" id="apiStatus">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Connecting...</span>
+    </div>
+    
+    <script>
+        // Configuration
+        const CONFIG = {
+            // For local development, use localhost
+            // For GitHub Pages, update this to your backend URL
+            API_URL: window.location.hostname === 'localhost' 
+                ? 'http://localhost:8000' 
+                : 'https://your-backend-url.com',
+            
+            // Memory storage settings
+            SESSION_ID: `WEB-${Date.now()}`,
+            STORAGE_KEY: 'ai_tutor_memory'
+        };
+        
+        // Initialize distributed memory connection
+        let memoryState = {
+            session: CONFIG.SESSION_ID,
+            mood: 'happy',
+            focus: 'Getting Started',
+            messages: [],
+            files: [],
+            context: {}
+        };
+        
+        // Load saved state from localStorage
+        function loadMemoryState() {
+            const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    memoryState = { ...memoryState, ...parsed };
+                    // Update UI with saved mood
+                    if (memoryState.mood) {
+                        document.querySelectorAll('.mood-emoji').forEach(e => {
+                            e.classList.remove('selected');
+                            if (e.dataset.mood === memoryState.mood) {
+                                e.classList.add('selected');
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.error('Failed to load saved state:', e);
+                }
+            }
+        }
+        
+        // Save state to localStorage
+        function saveMemoryState() {
+            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(memoryState));
+        }
+        
+        // API connection management
+        let apiConnected = false;
+        
+        async function checkAPIConnection() {
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/health`, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    setAPIStatus(true, 'Connected');
+                    apiConnected = true;
+                } else {
+                    throw new Error('API not responding');
+                }
+            } catch (error) {
+                setAPIStatus(false, 'Offline Mode');
+                apiConnected = false;
+            }
+        }
+        
+        function setAPIStatus(connected, text) {
+            const dot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            dot.className = 'status-dot ' + (connected ? 'connected' : 'error');
+            statusText.textContent = text;
+        }
+        
+        // Chat functionality
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const sendButton = document.getElementById('sendButton');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            // Disable input while processing
+            input.disabled = true;
+            sendButton.disabled = true;
+            
+            // Add user message
+            addMessage(message, 'user');
+            input.value = '';
+            
+            // Add typing indicator
+            const typingId = addTypingIndicator();
+            
+            try {
+                let response;
+                
+                if (apiConnected) {
+                    // Call real API
+                    const apiResponse = await fetch(`${CONFIG.API_URL}/chat`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            session_id: memoryState.session,
+                            context: memoryState.context,
+                            mood: memoryState.mood
+                        })
+                    });
+                    
+                    const data = await apiResponse.json();
+                    response = data.response;
+                    
+                    // Update context from API
+                    if (data.context) {
+                        memoryState.context = data.context;
+                    }
+                } else {
+                    // Fallback to local responses
+                    response = generateLocalResponse(message);
+                }
+                
+                // Remove typing indicator and add response
+                removeTypingIndicator(typingId);
+                addMessage(response, 'tutor');
+                
+                // Update memory
+                memoryState.messages.push(
+                    { role: 'user', content: message, timestamp: new Date().toISOString() },
+                    { role: 'tutor', content: response, timestamp: new Date().toISOString() }
+                );
+                updateMemoryDisplay('message', { user: message, tutor: response });
+                saveMemoryState();
+                
+            } catch (error) {
+                console.error('Error sending message:', error);
+                removeTypingIndicator(typingId);
+                addMessage('I apologize, but I encountered an error. Please try again.', 'system');
+            } finally {
+                // Re-enable input
+                input.disabled = false;
+                sendButton.disabled = false;
+                input.focus();
+            }
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        function addMessage(text, type) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function addTypingIndicator() {
+            const messagesDiv = document.getElementById('chatMessages');
+            const indicatorDiv = document.createElement('div');
+            const id = `typing-${Date.now()}`;
+            indicatorDiv.id = id;
+            indicatorDiv.className = 'message tutor';
+            indicatorDiv.innerHTML = `
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            `;
+            messagesDiv.appendChild(indicatorDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            return id;
+        }
+        
+        function removeTypingIndicator(id) {
+            const indicator = document.getElementById(id);
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+        
+        function generateLocalResponse(message) {
+            // Enhanced local responses based on context
+            const lowerMessage = message.toLowerCase();
+            
+            if (lowerMessage.includes('answer') || lowerMessage.includes('solve')) {
+                return "I can't give you the answer directly, but I can help guide you. What part are you finding challenging? Let's break it down step by step.";
+            } else if (lowerMessage.includes('help')) {
+                return "I'm here to help! Can you show me what you've tried so far? Understanding your approach will help me guide you better.";
+            } else if (lowerMessage.includes('homework')) {
+                return "Let's work through your homework together. What subject is it for, and what specific problem are you working on?";
+            } else if (lowerMessage.includes('understand') || lowerMessage.includes('confused')) {
+                return "It's okay to feel confused - that's part of learning! Can you tell me which specific concept or part is unclear? We'll work through it together.";
+            } else if (lowerMessage.includes('test') || lowerMessage.includes('exam')) {
+                return "Preparing for a test? Great! Let's create a study plan. What topics will be covered, and which ones do you feel least confident about?";
+            } else if (lowerMessage.includes('focus') || lowerMessage.includes('distracted')) {
+                const tips = [
+                    "Let's try the Pomodoro technique: 25 minutes of focused work, then a 5-minute break.",
+                    "Have you tried breaking this task into smaller, more manageable pieces?",
+                    "Sometimes a quick movement break helps. Stand up, stretch, then we'll tackle this together.",
+                    "Let's identify one specific thing to focus on for the next 10 minutes."
+                ];
+                return tips[Math.floor(Math.random() * tips.length)];
+            } else {
+                return "That's interesting. Can you tell me more about what you're working on? I'm here to guide you through the learning process.";
+            }
+        }
+        
+        // Quick action functions
+        function capturePhoto() {
+            addMessage("Ready to capture a whiteboard photo. Please use the file upload area below.", 'system');
+            document.getElementById('dropZone').style.border = '3px solid #667eea';
+        }
+        
+        function checkAssignments() {
+            addMessage("Let me help you organize your assignments. What classes do you have assignments for?", 'tutor');
+            updateMemoryDisplay('action', 'check_assignments');
+        }
+        
+        function generateStudyGuide() {
+            addMessage("I'll help you create a study guide. What subject and topic would you like to focus on?", 'tutor');
+            updateMemoryDisplay('action', 'generate_study_guide');
+        }
+        
+        function dailyChecklist() {
+            addMessage("Here's your daily checklist:", 'system');
+            setTimeout(() => {
+                const checklist = `Daily Success Checklist:
+✓ Check backpack for all materials
+✓ Review today's schedule
+✓ Organize workspace
+✓ Set 3 main goals for today
+✓ Prepare questions for each class
+✓ Plan break times`;
+                addMessage(checklist, 'tutor');
+            }, 500);
+        }
+        
+        function askQuestion() {
+            document.getElementById('chatInput').focus();
+            addMessage("What would you like to know? Remember, I'm here to guide you to find the answer!", 'tutor');
+        }
+        
+        function reviewNotes() {
+            addMessage("Which subject's notes would you like to review? You can also upload your notes using the file drop area.", 'tutor');
+            updateMemoryDisplay('action', 'review_notes');
+        }
+        
+        // Mood tracking
+        function setMood(mood, emoji) {
+            memoryState.mood = mood;
+            
+            // Update UI
+            document.querySelectorAll('.mood-emoji').forEach(e => {
+                e.classList.remove('selected');
+                if (e.dataset.mood === mood) {
+                    e.classList.add('selected');
+                }
+            });
+            
+            // Provide appropriate response
+            const responses = {
+                'happy': "Great to see you're feeling good! Let's make the most of this positive energy.",
+                'focused': "Perfect mindset for learning! What shall we work on?",
+                'struggling': "It's okay to have tough days. Let's take things one step at a time. What's the most pressing task?",
+                'excited': "I love your enthusiasm! Let's channel that energy into something productive!"
+            };
+            
+            addMessage(`Mood updated to ${emoji}. ${responses[mood]}`, 'system');
+            updateMemoryDisplay('mood', mood);
+            saveMemoryState();
+        }
+        
+        // Memory state management
+        function updateMemoryDisplay(type, data) {
+            memoryState.lastUpdated = new Date().toISOString();
+            
+            const memoryDisplay = document.getElementById('memoryDisplay');
+            const newItem = document.createElement('div');
+            newItem.className = 'memory-item';
+            newItem.innerHTML = `
+                <span class="tag">UPDATE</span>
+                <strong>${type.toUpperCase()}</strong><br>
+                <small>${JSON.stringify(data).substring(0, 50)}...</small>
+            `;
+            memoryDisplay.insertBefore(newItem, memoryDisplay.firstChild);
+            
+            // Keep only last 5 items
+            while (memoryDisplay.children.length > 5) {
+                memoryDisplay.removeChild(memoryDisplay.lastChild);
+            }
+            
+            saveMemoryState();
+        }
+        
+        // File handling
+        const dropZone = document.getElementById('dropZone');
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            
+            const files = Array.from(e.dataTransfer.files);
+            for (const file of files) {
+                await handleFileUpload(file);
+            }
+        });
+        
+        dropZone.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.multiple = true;
+            input.accept = 'image/*,.pdf,.doc,.docx,.txt';
+            input.onchange = async (e) => {
+                const files = Array.from(e.target.files);
+                for (const file of files) {
+                    await handleFileUpload(file);
+                }
+            };
+            input.click();
+        });
+        
+        async function handleFileUpload(file) {
+            addMessage(`Uploading: ${file.name}`, 'system');
+            
+            // Add to memory
+            const fileInfo = {
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                timestamp: new Date().toISOString()
+            };
+            
+            memoryState.files.push(fileInfo);
+            
+            // Update recent files display
+            updateRecentFiles();
+            
+            // If API is connected, upload file
+            if (apiConnected) {
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('session_id', memoryState.session);
+                    
+                    const response = await fetch(`${CONFIG.API_URL}/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        addMessage(`File uploaded successfully: ${file.name}`, 'system');
+                        
+                        if (data.extracted_text) {
+                            addMessage("I've processed your file. What would you like to know about it?", 'tutor');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    addMessage(`File saved locally: ${file.name}`, 'system');
+                }
+            } else {
+                addMessage(`File saved locally: ${file.name}. I'll process it when the connection is restored.`, 'system');
+            }
+            
+            saveMemoryState();
+        }
+        
+        function updateRecentFiles() {
+            const recentFiles = document.getElementById('recentFiles');
+            recentFiles.innerHTML = memoryState.files.slice(-5).reverse().map(f => `
+                <div class="memory-item">
+                    <strong>${f.name}</strong><br>
+                    <small>${(f.size / 1024).toFixed(1)} KB - ${new Date(f.timestamp).toLocaleTimeString()}</small>
+                </div>
+            `).join('');
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', () => {
+            loadMemoryState();
+            checkAPIConnection();
+            
+            // Recheck API connection periodically
+            setInterval(checkAPIConnection, 30000);
+            
+            // Load any saved messages
+            if (memoryState.messages.length > 0) {
+                addMessage("Welcome back! Here's where we left off:", 'system');
+                // Show last few messages
+                const recent = memoryState.messages.slice(-4);
+                recent.forEach(msg => {
+                    addMessage(msg.content, msg.role);
+                });
+            } else {
+                addMessage("Hello! I'm ready to help you with your studies. What would you like to work on today?", 'tutor');
+            }
+            
+            // Update recent files
+            if (memoryState.files.length > 0) {
+                updateRecentFiles();
+            }
+            
+            // Focus on input
+            document.getElementById('chatInput').focus();
+        });
+        
+        // Save state before unload
+        window.addEventListener('beforeunload', () => {
+            saveMemoryState();
+        });
+    </script>
+</body>
+</html>
