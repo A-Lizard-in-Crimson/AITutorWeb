@@ -7,7 +7,9 @@ class SecureChat {
     constructor(config = {}) {
         this.config = {
             // Use edge functions or self-hosted endpoints
-            endpoint: config.endpoint || 'https://your-edge-function.workers.dev',
+            endpoint: config.endpoint || (window.location.protocol === 'https:' 
+    ? 'https://ai-tutor-edge.saunteringvagabond.workers.dev'
+    : 'http://localhost:8000'),
             
             // Client-side encryption
             useEncryption: config.useEncryption !== false,
